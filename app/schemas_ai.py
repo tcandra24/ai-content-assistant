@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-GenerationKind = Literal["hook", "script", "caption"]
+GenerationKind = Literal["hook", "script", "caption", "video_prompt"]
 
 
 # ---------- Bentuk output yang dipaksakan ke AI ----------
@@ -34,6 +34,35 @@ class CaptionOutput(BaseModel):
         description="Hashtag relevan, masing-masing diawali tanda #",
     )
 
+class VideoClip(BaseModel):
+    clip_number: int = Field(ge=1, description="Nomor urut klip, mulai dari 1")
+    prompt: str = Field(
+        description=(
+            "Prompt video dalam bahasa Inggris, siap ditempel ke tool AI video. "
+            "Memuat subjek, aksi, lingkungan, pencahayaan, dan gaya sinematik, "
+            "serta mengulang deskripsi karakter agar konsisten antar klip"
+        )
+    )
+    camera_motion: str = Field(
+        description="Gerak kamera, misalnya slow dolly in, static shot, atau tracking shot"
+    )
+    duration_seconds: int = Field(
+        ge=1, le=10, description="Durasi klip dalam detik, umumnya 5 sampai 10"
+    )
+    negative_prompt: str | None = Field(
+        default=None, description="Hal yang harus dihindari pada klip ini"
+    )
+
+
+class VideoPromptOutput(BaseModel):
+    style_guide: str = Field(
+        description=(
+            "Panduan gaya visual global (palet warna, pencahayaan, mood, deskripsi "
+            "karakter utama) yang berlaku untuk semua klip"
+        )
+    )
+    clips: list[VideoClip] = Field(min_length=1, max_length=20)
+
 
 # ---------- Request dan response API ----------
 class GenerateRequest(BaseModel):
@@ -50,4 +79,3 @@ class GenerationRead(BaseModel):
     output: dict
     model: str
     created_at: datetime
-    
